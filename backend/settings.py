@@ -27,10 +27,12 @@ SECRET_KEY = 'django-insecure-d^f9qp3$ep+zodt$5ob3t55fl9e*ki1!-dwl^u@-^%w4syz8jb
 DEBUG = True
 
 ALLOWED_HOSTS = []
+AUTH_USER_MODEL = 'user_info.UserInfo'
+AUTHENTICATION_BACKENDS = ['user_info.backendAuth.CaseInsensitiveModelBackend']
 
 CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:8081',
-    'http://localhost:8081',
+    'http://127.0.0.1:8080',
+    'http://localhost:8080',
 ]
 # Application definition
 
@@ -43,10 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework.authtoken',
     'corsheaders',
-    'stock_name.apps.StockNameConfig',
-    'djoser'
+    'stock_name',
+    'user_info',
 ]
 
 MIDDLEWARE = [
@@ -91,7 +92,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': '172.17.0.1',
-        'PORT': '3333',
+        'PORT': '3307',
     }
 }
 
@@ -100,17 +101,26 @@ DATABASES = {
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'user_info.passwordValidator.CustomPasswordValidator'
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'user_info.passwordValidator.LengthValidator'
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'user_info.passwordValidator.IllegalCharacterValidator'
     },
 ]
 
@@ -144,6 +154,9 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -155,5 +168,6 @@ SIMPLE_JWT = {
     # 'BLACKLIST_AFTER_ROTATION': False,
     # 'UPDATE_LAST_LOGIN': False,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=10),
+    'UPDATE_LAST_LOGIN': True,
 }
