@@ -4,7 +4,7 @@ from stock_name.models import StockName
 class StockSerializer(ModelSerializer):
   class Meta:
     model = StockName
-    fields = '__all__'
+    fields = ['stock', 'stockName', 'industry', 'updated']
 
 class StockIndustrySerializer(ModelSerializer):
   class Meta:

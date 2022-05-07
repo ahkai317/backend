@@ -33,6 +33,8 @@ class Command(BaseCommand):
         result[7] = result[7].apply(lambda x: datetime.strptime(x, "%Y/%m/%d"))
         result[6].where(result[5] != 'ETF', result[5], inplace=True)
         result[6].where(result[5] != 'ETN', result[5], inplace=True)
+        result[6].where(result[5] != '受益證券-不動產投資信託', '受益證券', inplace=True)
+        result[6].where(result[5] != '臺灣存託憑證(TDR)', '存託憑證', inplace=True)
         result[6].where(pd.notna(result[6]), '無分類', inplace=True)
         result.columns = ['stock', 'stockName', 'market',
                         'securities', 'industry', 'list_date']

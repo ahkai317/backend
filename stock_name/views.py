@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from stock_name.filter import StockFilter
 from rest_framework import filters
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 # Create your views here.
 
 class StockViewSet(ReadOnlyModelViewSet):
@@ -14,6 +15,7 @@ class StockViewSet(ReadOnlyModelViewSet):
   filter_backends = [DjangoFilterBackend, filters.SearchFilter]
   filter_class = StockFilter
   search_fields = ['^stock', '^stockName']
+  permission_classes = [AllowAny]
 
   @action(detail=False, methods=['get'])
   def search(self, request):
@@ -23,7 +25,7 @@ class StockViewSet(ReadOnlyModelViewSet):
 
   @action(detail=False, methods=['get'])
   def industry(self, request):
-    queryset = StockName.objects.values('industry').distinct()
+    queryset = StockName.objects.values('industry').distinct().order_by('industry')
     serializer = StockIndustrySerializer(queryset, many=True)
     return Response(serializer.data)
 

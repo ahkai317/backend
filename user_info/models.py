@@ -69,9 +69,11 @@ class UserInfo(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-    def has_perms(self, perm, obj=None):
+    def has_perm(self, perm, obj=None):
         return self.is_admin
-
+    # 如果在views裡面沒有設置permission_classes的話就要家這一行，要不然請求頭Authorization有內的狀況下他就會報錯，因為預設setting裡面的permission檢查會檢查這一行
+    # def has_perms(self, perms, obj=None):
+    #     return self.is_active
     def has_module_perms(self, add_label):
         return True
 
