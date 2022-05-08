@@ -9,7 +9,6 @@ from stock_name.models import StockName
 from datetime import datetime
 import requests
 
-
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
@@ -38,13 +37,18 @@ class Command(BaseCommand):
         result[6].where(result[5] != '臺灣存託憑證(TDR)', '存託憑證', inplace=True)
         result[6].where(pd.notna(result[6]), '無分類', inplace=True)
         result.columns = ['stock', 'stockName', 'market',
-                          'securities', 'industry', 'list_date']
-        result = result.to_dict('records')
+                        'securities', 'industry', 'list_date']
+        result['updated'] = datetime.now()
 
-        # ================== Start to sql ==============================
-        for stock in result:
-            StockName.objects.update_or_create(stock=stock["stock"], stockName=stock["stockName"],
-                                               market=stock["market"],
-                                               securities=stock["securities"],
-                                               industry=stock["industry"],
-                                               list_date=stock["list_date"],)
+        #================== Start to sql ==============================         
+
+        database = settings.DATABASES['default']['NAME']
+        user = settings.DATABASES['default']['USER']
+        password = settings.DATABASES['default']['PASSWORD']
+        host = settings.DATABASES['default']['HOST']
+        port = settings.DATABASES['default']['PORT']
+
+        engine = create_engine(f"mysql://{user}:{password}@{host}:{port}/{database}?charset=utf8")
+
+        result.to_sql(StockName._meta.db_table, con=engine, if_exists='append',index=False)
+

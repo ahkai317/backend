@@ -1,3 +1,4 @@
+from cgi import print_exception
 from django.db import models
 from django.utils import timezone
 
@@ -5,12 +6,24 @@ from django.utils import timezone
 
 
 class StockName(models.Model):
-    stock = models.CharField(max_length=32, primary_key=True)
+    stock = models.CharField(max_length=32, unique=True)
     stockName = models.CharField(max_length=64, default="")
     market = models.CharField(max_length=64, default="")
     securities = models.CharField(max_length=64, default="")
     industry = models.CharField(max_length=64, default="")
     list_date = models.CharField(max_length=64, default="")
-    updated = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.stock
+
+class StockDetail(models.Model):
+    stock = models.ForeignKey('StockName', on_delete=models.PROTECT, related_name='stockDetail')
+    price = models.CharField(max_length=16, verbose_name='股價', default="")
+    ud = models.CharField(max_length=16, verbose_name='漲跌', default="")
+    udpercent = models.CharField(max_length=16, verbose_name='漲跌幅', default="")
+    open = models.CharField(max_length=16, verbose_name='開盤價', default="")
+    yesterday = models.CharField(max_length=16, verbose_name='昨收價', default="")
+    high = models.CharField(max_length=16, verbose_name='最高價', default="")
+    low = models.CharField(max_length=16, verbose_name='最低價', default="")
+    volumn = models.CharField(max_length=16, verbose_name='交易量', default="")
+    updated = models.DateTimeField(auto_now=True)
