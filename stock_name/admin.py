@@ -9,7 +9,7 @@ class StockAdmin(ModelAdmin):
   readonly_fields = ('updated',)
 
   filter_horizontal = ()
-  list_filter = ('securities', 'industry')
+  list_filter = ('industry',)
   fieldsets = ()
 admin.site.register(StockName, StockAdmin)
 
