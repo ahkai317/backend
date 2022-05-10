@@ -78,11 +78,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         stock_list = StockName.objects.values('stock')
         stock_list = pd.DataFrame(stock_list)
-        stock_list = stock_list.iloc[0:round(
-            len(stock_list)/2), 0].values.tolist()
+        stock_list = stock_list.iloc[round(
+            len(stock_list)/3*2):, 0].values.tolist()
         step = 99
         totalStep = int(len(stock_list)/step)+1
         for i in range(totalStep):
             globals()['task' + str(i)] = threading.Thread(target=get_stock,
-                                                          args=(step*i, step*(i+1)))
+                                                          args=(step*(i+totalStep*2), step*(i+(totalStep*2)+1)))
             globals()['task' + str(i)].start()

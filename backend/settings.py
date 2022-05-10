@@ -17,7 +17,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
+# Quick-start development settings - `unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -31,8 +31,8 @@ AUTH_USER_MODEL = 'user_info.UserInfo'
 AUTHENTICATION_BACKENDS = ['user_info.backendAuth.CaseInsensitiveModelBackend']
 
 CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:8080',
-    'http://localhost:8080',
+    'http://127.0.0.1:8081',
+    'http://localhost:8081',
 ]
 # Application definition
 
@@ -87,12 +87,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', 
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'django',
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': '172.17.0.1',
-        'PORT': '3307',
+        'PORT': '3333',
     }
 }
 

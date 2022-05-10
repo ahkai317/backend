@@ -10,11 +10,14 @@ class StockName(models.Model):
     stockName = models.CharField(max_length=64, default="")
     industry = models.CharField(max_length=64, default="")
     updated = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.stock
 
+
 class StockDetail(models.Model):
-    stock = models.ForeignKey('StockName', on_delete=models.PROTECT, related_name='stockDetail')
+    stock = models.ForeignKey(
+        'StockName', on_delete=models.PROTECT, related_name='stockDetail')
     price = models.CharField(max_length=16, verbose_name='股價', default="")
     ud = models.CharField(max_length=16, verbose_name='漲跌', default="")
     udpercent = models.CharField(max_length=16, verbose_name='漲跌幅', default="")
@@ -23,4 +26,7 @@ class StockDetail(models.Model):
     high = models.CharField(max_length=16, verbose_name='最高價', default="")
     low = models.CharField(max_length=16, verbose_name='最低價', default="")
     volumn = models.CharField(max_length=16, verbose_name='交易量', default="")
-    updated = models.DateTimeField(auto_now=True)
+    updated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.stock

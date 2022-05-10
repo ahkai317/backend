@@ -9,25 +9,27 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 # Create your views here.
 
+
 class StockViewSet(ReadOnlyModelViewSet):
-  queryset = StockName.objects.all()
-  serializer_class = StockSerializer
-  filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-  filter_class = StockFilter
-  search_fields = ['^stock', '^stockName']
-  permission_classes = [AllowAny]
+    queryset = StockName.objects.all()
+    serializer_class = StockSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_class = StockFilter
+    search_fields = ['^stock', '^stockName']
+    permission_classes = [AllowAny]
 
-  @action(detail=False, methods=['get'])
-  def search(self, request):
-    queryset = super().filter_queryset(self.queryset)[:10]
-    serializer = StockSerializer(queryset, many=True)
-    return Response(serializer.data)
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        queryset = super().filter_queryset(self.queryset)[:10]
+        serializer = StockSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-  @action(detail=False, methods=['get'])
-  def industry(self, request):
-    queryset = StockName.objects.values('industry').distinct().order_by('industry')
-    serializer = StockIndustrySerializer(queryset, many=True)
-    return Response(serializer.data)
+    @action(detail=False, methods=['get'])
+    def industry(self, request):
+        queryset = StockName.objects.values(
+            'industry').distinct().order_by('industry')
+        serializer = StockIndustrySerializer(queryset, many=True)
+        return Response(serializer.data)
 
 # def showStockName(request):
 #   res = request.GET
