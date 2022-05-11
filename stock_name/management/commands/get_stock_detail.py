@@ -1,5 +1,6 @@
 # ========= django setting required ===============
 from time import time
+from xxlimited import Str
 from django.core.management.base import BaseCommand
 from backend import settings
 from django.utils import timezone
@@ -13,7 +14,6 @@ import requests
 
 
 def get_stock(v1, v2):
-    print("執行中...")
     stock_list = StockName.objects.values('stock')[v1:v2]
     stock_list = pd.DataFrame(stock_list)
     stock_list = stock_list.iloc[:, 0].values.tolist()
@@ -28,9 +28,14 @@ def get_stock(v1, v2):
             return round(row["漲跌"]/float(row["昨收"]) * 100, 2)
         return "-"
 
+    def getSqlData(row):
+        if row["股價"] == "-":
+            sqlData = StockDetail.objects.filter(
+                stock_id__stock__in=[row["代號"]]).values()[0]['price']
+            return sqlData
+        return row["股價"]
+
     result = pd.DataFrame()
-    currentData = pd.DataFrame(list(StockDetail.objects.all().values()))
-    currentName = pd.DataFrame(list(StockName.objects.all().values()))
 
     for n in range(int(len(stock_list)/100)+1):
         l = list(map(lambda x: f"tse_{x}.tw", stock_list[n*100:(n+1)*100]))
@@ -44,16 +49,14 @@ def get_stock(v1, v2):
         df.columns = ["代號", "簡稱", "股價", "漲跌",
                       "漲跌幅", "開盤", "昨收", "最高", "最低", "成交量"]
         # 轉換為小數點第二位
-        df[df.iloc[:, 2:-1] != '-'] = df[df.iloc[:, 2:] != '-'].astype('float')
-        # 如果股價是'-'的話就從舊的資料中拿
-        df.loc[df["股價"] == '-', ["股價", "漲跌", "漲跌幅"]] = currentData.loc[currentData['stock_id'].isin(
-            currentName.loc[currentName['stock'].isin(df.loc[df["股價"] == '-', "代號"]), 'id']), ["price", "ud", "udpercent"]]
+
         # 計算漲跌幅的欄位
+        df["股價"] = df.apply(getSqlData, axis=1)
         df["漲跌"] = df.apply(updn, axis=1)
         df["漲跌幅"] = df.apply(updn100, axis=1)
-        df[["漲跌", "漲跌幅"]] = df[["漲跌", "漲跌幅"]].astype(str)
+        df[df.iloc[:, 2:-1] != '-'] = df[df.iloc[:, 2:] != '-'].astype('float')
         # 將nan的資料轉換成'-'
-        df = df.applymap(lambda x: x if (str(x) != 'nan') else '-')
+        # df = df.applymap(lambda x: x if (str(x) != 'nan') else '-')
         # 合併資料
         result = pd.concat([result, df], ignore_index=True)
         # ================== Start to sql ==============================
