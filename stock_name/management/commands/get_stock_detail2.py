@@ -51,10 +51,10 @@ def get_stock(v1, v2):
         # 轉換為小數點第二位
 
         # 計算漲跌幅的欄位
+        df[df.iloc[:, 2:-1] != '-'] = df[df.iloc[:, 2:] != '-'].astype('float')
         df["股價"] = df.apply(getSqlData, axis=1)
         df["漲跌"] = df.apply(updn, axis=1)
         df["漲跌幅"] = df.apply(updn100, axis=1)
-        df[df.iloc[:, 2:-1] != '-'] = df[df.iloc[:, 2:] != '-'].astype('float')
         # 將nan的資料轉換成'-'
         # df = df.applymap(lambda x: x if (str(x) != 'nan') else '-')
         # 合併資料

@@ -33,6 +33,8 @@ AUTHENTICATION_BACKENDS = ['user_info.backendAuth.CaseInsensitiveModelBackend']
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8081',
     'http://localhost:8081',
+    'http://127.0.0.1:8080',
+    'http://localhost:8080'
 ]
 # Application definition
 
@@ -92,7 +94,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': '172.17.0.1',
-        'PORT': '3333',
+        'PORT': '3307',
     }
 }
 

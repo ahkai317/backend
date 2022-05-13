@@ -1,6 +1,7 @@
 from cgi import print_exception
 from django.db import models
 from django.utils import timezone
+from numpy import require
 
 # Create your models here.
 
@@ -12,7 +13,7 @@ class StockName(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.stock
+        return str(self.stock)
 
 
 class StockDetail(models.Model):
@@ -29,4 +30,4 @@ class StockDetail(models.Model):
     updated = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.stock
+        return str(self.stock.stock)
