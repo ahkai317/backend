@@ -90,7 +90,7 @@ class StockViewSet(ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search(self, request):
-        queryset = super().filter_queryset(self.queryset)[:10]
+        queryset = super().filter_queryset(self.queryset)[:6]
         serializer = StockSerializer(queryset, many=True)
         return Response(serializer.data)
 
