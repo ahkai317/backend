@@ -1,3 +1,4 @@
+from email.policy import default
 import requests
 import pandas as pd
 import random
@@ -17,9 +18,9 @@ from rest_framework.permissions import AllowAny
 
 def news(request):
     # Yahoo --> /...?keyword=台股&page=page
-    keyword = '台股'
+    keyword = request.GET.get('keyword', default='台股')
     # request.GET.get('keyword')
-    page = '0'
+    page = request.GET.get('page', default='0')
     # request.GET.get('page')
     # user_agent = UserAgent()
     user_agents = [
