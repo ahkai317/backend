@@ -11,24 +11,46 @@ class StockIndustrySerializer(ModelSerializer):
         model = StockName
         fields = ['industry']
 
+# =====================================
+
+
+class StockSerializer(ModelSerializer):
+    class Meta:
+        model = StockName
+        fields = ['stock', 'stockName', 'industry',
+                  'updated']
+
 
 class StockDetailSerializer(ModelSerializer):
+    stock = StockSerializer(many=False)
 
     class Meta:
         model = StockDetail
         fields = "__all__"
 
 
-class StockSerializer(ModelSerializer):
-    stockDetail = StockDetailSerializer(many=True)
-
-    class Meta:
-        model = StockName
-        fields = ['stock', 'stockName', 'industry',
-                  'updated', 'stockDetail']
+# =====================================
 
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 30
     page_size_query_param = 'page_size'
     max_page_size = 100
+
+
+# =====================================
+# class StockOrderSerializer(ModelSerializer):
+#     class Meta:
+#         model = StockName
+#         fields = ['stock', 'stockName', 'industry',
+#                   'updated']
+
+
+# class StockDetailOrderSerializer(ModelSerializer):
+#     stock = StockOrderSerializer(many=False)
+
+#     class Meta:
+#         model = StockDetail
+#         fields = "__all__"
+
+# =====================================

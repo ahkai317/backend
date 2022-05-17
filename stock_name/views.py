@@ -1,18 +1,21 @@
-from email.policy import default
 import requests
 import pandas as pd
 import random
+import re
 from bs4 import BeautifulSoup
 from rest_framework.response import Response
 from django.http import JsonResponse
-from stock_name.models import StockName
-from stock_name.serializers import StockSerializer, StockIndustrySerializer, StandardResultsSetPagination
+from traitlets import default
+from collections import OrderedDict
+from stock_name.models import StockName, StockDetail
+from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from stock_name.filter import StockFilter
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from django.core.paginator import Paginator
 # Create your views here.
 
 
@@ -41,63 +44,114 @@ def news(request):
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20",
         "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52",
     ]
-    re = requests.get(f'https://tw.news.search.yahoo.com/search?p={keyword}&b={page}1',
-                      headers={
-                          "Content-Type": "application/json",
-                          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-                          "Accept-Encoding": "gzip, deflate, br",
-                          "Accept-Language": "zh-TW,zh;q=0.9",
-                          "Host": "tw.news.search.yahoo.com",  # 目標網站
-                          "Sec-Fetch-Dest": "document",
-                          "Sec-Fetch-Mode": "navigate",
-                          "Sec-Fetch-Site": "none",
-                          "Upgrade-Insecure-Requests": "1",
-                          # user_agent.random #使用者代理
-                          "User-Agent": random.choice(user_agents),
-                      })
-    soup = BeautifulSoup(re.text, 'html.parser')
+    res = requests.get(f'https://tw.news.search.yahoo.com/search?p={keyword}&b={page}1',
+                       headers={
+                           "Content-Type": "application/json",
+                           "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                           "Accept-Encoding": "gzip, deflate, br",
+                           "Accept-Language": "zh-TW,zh;q=0.9",
+                           "Host": "tw.news.search.yahoo.com",  # 目標網站
+                           "Sec-Fetch-Dest": "document",
+                           "Sec-Fetch-Mode": "navigate",
+                           "Sec-Fetch-Site": "none",
+                           "Upgrade-Insecure-Requests": "1",
+                           # user_agent.random #使用者代理
+                           "User-Agent": random.choice(user_agents),
+                       })
+    soup = BeautifulSoup(res.text, 'html.parser')
     url_list = []
     title_list = []
     source_list = []
     publish_list = []
-
+    content_list = []
     img_list = []
-    for i in range(len(soup.select('ol.mb-15.reg.searchCenterMiddle  li  ul.compArticleList'))):
+
+    for i in range(len(list(soup.select('ol.mb-15.reg.searchCenterMiddle  li  ul.compArticleList')))):
         url_list.append(soup.select('ul.compArticleList')[i].select(
             'h4.s-title.fz-16.lh-20')[0].select('a')[0]['href'])
         title_list.append(soup.select('ul.compArticleList')[
-            i].select('h4.s-title.fz-16.lh-20')[0].text)
+                          i].select('h4.s-title.fz-16.lh-20')[0].text)
         source_list.append(soup.select('ul.compArticleList')[
-            i].select('span.s-source.mr-5.cite-co')[0].string)
+                           i].select('span.s-source.mr-5.cite-co')[0].string)
         publish_list.append(soup.select('ul.compArticleList')[
                             i].select('span.fc-2nd.s-time.mr-8')[0].text)
-        img_list.append(soup.select('ul.compArticleList')
-                        [0].select('img')[0]['src'])
+        content_list.append(soup.select('ul.compArticleList')[
+                            i].select('p')[0].text)
+        try:
+            if i <= 3:
+                img_list.append((re.findall(
+                    r'/https.*', soup.select('ul.compArticleList')[i].select('img')[0]['src'])[0][1:]))
+            else:
+                img_list.append((re.findall(r'/https.*', soup.select('ul.compArticleList')[
+                                i].select('img')[0]['data-src'])[0][1:]))   #: --> 0517 .isdigit() 只是字串不為空
+
+        except (IndexError, ValueError):
+            img_list.append(
+                f'https://ww2.money-link.com.tw/images/news/4/{i}.jpg')
+
     news_dict = pd.DataFrame(
-        zip(title_list, url_list, source_list, publish_list))
-    news_dict.columns = ['title', 'url', 'source', 'publish']
+        zip(title_list, url_list, source_list, publish_list, content_list, img_list))
+    news_dict.columns = ['title', 'url', 'source', 'publish', 'content', 'img']
     news_dict = news_dict.to_dict('records')
     return JsonResponse(news_dict, safe=False)
 
 
 class StockViewSet(ReadOnlyModelViewSet):
-    queryset = StockName.objects.all()
-    serializer_class = StockSerializer
+    queryset = StockDetail.objects.all()
+    serializer_class = StockDetailSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filter_class = StockFilter
-    search_fields = ['^stock', '^stockName']
+    search_fields = ['^stock__stock', '^stock__stockName']
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'])
     def search(self, request):
         queryset = super().filter_queryset(self.queryset)[:6]
-        serializer = StockSerializer(queryset, many=True)
+        serializer = StockDetailSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def orderData(self, request):
+        orderColumn = request.GET.get('col')
+        reversOrder = request.GET.get('reverse', default='')
+        industry = request.GET.get('industry', default='')
+        page = request.GET.get('page', default=1)
+        queryset = StockDetail.objects.filter(stock__industry=industry).extra(
+            {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock_id')}).order_by('%sinter' % reversOrder)
+        serializer = StockDetailSerializer(queryset, many=True)
+
+        paginator = Paginator(serializer.data, 30)
+        page = paginator.page(page)
+
+        previous_url = None
+        next_url = None
+
+        _url_scheme = request.scheme
+        _host = request.get_host()
+        _path_info = request.path_info
+
+        if page.has_previous():
+            previous_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
+                _url_scheme, _host, _path_info, industry, 30, page.previous_page_number())
+        if page.has_next():
+            next_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
+                _url_scheme, _host, _path_info, industry, 30, page.next_page_number())
+
+        response_dict = OrderedDict([
+            ('count', len(serializer.data)),
+            ('next', next_url),
+            ('previous', previous_url),
+            ('results', page.object_list)
+        ])
+        return JsonResponse(response_dict, status=200, safe=False)
+
+    # ==============================================================================================
     @action(detail=False, methods=['get'])
     def industry(self, request):
         queryset = StockName.objects.values(
             'industry').distinct().order_by('industry')
         serializer = StockIndustrySerializer(queryset, many=True)
-        return Response(serializer.data)
+        outPut = pd.DataFrame(serializer.data)
+        outPut = outPut.to_dict('list')
+        return Response(outPut)
