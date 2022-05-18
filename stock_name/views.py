@@ -6,6 +6,7 @@ import re
 from bs4 import BeautifulSoup
 from rest_framework import filters
 from django.http import Http404, JsonResponse
+from traitlets import default
 from stock_name.filter import StockFilter
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -136,7 +137,8 @@ class StockViewSet(ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def industry(self, request: Request) -> Response:
-        queryset = StockName.objects.values(
+        stockId = request.GET.get('stockId', default='')
+        queryset = StockName.objects.filter(stock__icontains=stockId).values(
             'industry').distinct().order_by('industry')
         serializer = StockIndustrySerializer(queryset, many=True)
         outPut = pd.DataFrame(serializer.data)
