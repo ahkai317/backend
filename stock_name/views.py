@@ -5,10 +5,8 @@ import random
 import re
 from bs4 import BeautifulSoup
 from rest_framework import filters
-from collections import OrderedDict
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from stock_name.filter import StockFilter
-from django.core.paginator import Paginator
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -131,6 +129,8 @@ class StockViewSet(ReadOnlyModelViewSet):
         # get the response
         # return a Response, so just return this
         responseData = self.get_paginated_response(page)
+        if responseData.data['results'] == []:
+            raise Http404
         # return responseData
         return responseData
 
@@ -144,6 +144,8 @@ class StockViewSet(ReadOnlyModelViewSet):
         return Response(outPut)
 
     # ==============================================================================================
+    # from django.core.paginator import Paginator
+    # from collections import OrderedDict
     # 記錄一下另一個寫法（原始自幹）
     # @action(detail=False, methods=['get'])
     # def orderData(self, request: Request) -> JsonResponse:
