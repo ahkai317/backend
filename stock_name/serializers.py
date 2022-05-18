@@ -3,7 +3,7 @@ from attr import field
 from numpy import source
 from stock_name.models import StockDetail, StockName
 from rest_framework.serializers import ModelSerializer, RelatedField
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 
 class StockIndustrySerializer(ModelSerializer):
@@ -32,10 +32,10 @@ class StockDetailSerializer(ModelSerializer):
 # =====================================
 
 
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 30
+class StandardResultsSetPagination(LimitOffsetPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
+    default_limit = 30
 
 
 # =====================================

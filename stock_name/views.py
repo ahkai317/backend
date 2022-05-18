@@ -1,25 +1,25 @@
+from urllib.request import Request
 import requests
 import pandas as pd
 import random
 import re
 from bs4 import BeautifulSoup
-from rest_framework.response import Response
-from django.http import JsonResponse
-from traitlets import default
+from rest_framework import filters
 from collections import OrderedDict
+from django.http import JsonResponse
+from stock_name.filter import StockFilter
+from django.core.paginator import Paginator
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from stock_name.models import StockName, StockDetail
-from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
-from stock_name.filter import StockFilter
-from rest_framework import filters
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
-from django.core.paginator import Paginator
+from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
 # Create your views here.
 
 
-def news(request):
+def news(request: Request) -> JsonResponse:
     # Yahoo --> /...?keyword=台股&page=page
     keyword = request.GET.get('keyword', default='台股')
     # request.GET.get('keyword')
@@ -106,52 +106,82 @@ class StockViewSet(ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'])
-    def search(self, request):
+    def search(self, request: Request) -> Response:
         queryset = super().filter_queryset(self.queryset)[:6]
         serializer = StockDetailSerializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def orderData(self, request):
+    def orderData(self, request: Request) -> Response:
+        # get variable from GET Request
         orderColumn = request.GET.get('col')
-        reversOrder = request.GET.get('reverse', default='')
         industry = request.GET.get('industry', default='')
-        page = request.GET.get('page', default=1)
-        queryset = StockDetail.objects.filter(stock__industry=industry).extra(
+        reversOrder = request.GET.get('reverse', default='')
+        # set the queryset
+        queryset = StockDetail.objects.filter(stock__industry__icontains=industry).extra(
             {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock_id')}).order_by('%sinter' % reversOrder)
+        # serializer for stock, stockName, industry...
         serializer = StockDetailSerializer(queryset, many=True)
+        # get the pagination info and create page
+        page = self.paginate_queryset(serializer.data)
+        # *****************************************************************
+        # original, no data Serializer, only paginationSerializer (另一種寫法)
+        # page = self.paginate_queryset(queryset.values("stock__stock", "stock__stockName"))
+        # *****************************************************************
+        # get the response
+        # return a Response, so just return this
+        responseData = self.get_paginated_response(page)
+        # return responseData
+        return responseData
 
-        paginator = Paginator(serializer.data, 30)
-        page = paginator.page(page)
-
-        previous_url = None
-        next_url = None
-
-        _url_scheme = request.scheme
-        _host = request.get_host()
-        _path_info = request.path_info
-
-        if page.has_previous():
-            previous_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
-                _url_scheme, _host, _path_info, industry, 30, page.previous_page_number())
-        if page.has_next():
-            next_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
-                _url_scheme, _host, _path_info, industry, 30, page.next_page_number())
-
-        response_dict = OrderedDict([
-            ('count', len(serializer.data)),
-            ('next', next_url),
-            ('previous', previous_url),
-            ('results', page.object_list)
-        ])
-        return JsonResponse(response_dict, status=200, safe=False)
-
-    # ==============================================================================================
     @action(detail=False, methods=['get'])
-    def industry(self, request):
+    def industry(self, request: Request) -> Response:
         queryset = StockName.objects.values(
             'industry').distinct().order_by('industry')
         serializer = StockIndustrySerializer(queryset, many=True)
         outPut = pd.DataFrame(serializer.data)
         outPut = outPut.to_dict('list')
         return Response(outPut)
+
+    # ==============================================================================================
+    # 記錄一下另一個寫法（原始自幹）
+    # @action(detail=False, methods=['get'])
+    # def orderData(self, request: Request) -> JsonResponse:
+    #     # get variable from GET Request
+    #     orderColumn = request.GET.get('col')
+    #     page = request.GET.get('page', default=1)
+    #     limit = request.GET.get('page', default=30)
+    #     industry = request.GET.get('industry', default='')
+    #     reversOrder = request.GET.get('reverse', default='')
+    #     # set the queryset
+    #     queryset = StockDetail.objects.filter(stock__industry=industry).extra(
+    #         {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock_id')}).order_by('%sinter' % reversOrder)
+    #     # serializer for stock, stockName, industry...
+    #     serializer = StockDetailSerializer(queryset, many=True)
+
+    #     # setting paginator
+    #     paginator = Paginator(serializer.data, limit)
+    #     page = paginator.page(page)
+    #     # set the url
+    #     previous_url = None
+    #     next_url = None
+    #     # get the url info from request for creating next or previous url
+    #     _url_scheme = request.scheme
+    #     _host = request.get_host()
+    #     _path_info = request.path_info
+    #     # creating url
+    #     if page.has_previous():
+    #         previous_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
+    #             _url_scheme, _host, _path_info, industry, limit, page.previous_page_number())
+    #     if page.has_next():
+    #         next_url = '{}://{}{}?industry={}&limit={}&page={}'.format(
+    #             _url_scheme, _host, _path_info, industry, limit, page.next_page_number())
+    #     # create a ordered dict for these data
+    #     response_dict = OrderedDict([
+    #         ('count', len(serializer.data)),
+    #         ('next', next_url),
+    #         ('previous', previous_url),
+    #         ('results', page.object_list)
+    #     ])
+    #     # return JsonResponse
+    #     return JsonResponse(response_dict, status=200, safe=False)
