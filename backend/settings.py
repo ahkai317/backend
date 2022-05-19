@@ -26,11 +26,13 @@ SECRET_KEY = 'django-insecure-d^f9qp3$ep+zodt$5ob3t55fl9e*ki1!-dwl^u@-^%w4syz8jb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 AUTH_USER_MODEL = 'user_info.UserInfo'
 AUTHENTICATION_BACKENDS = ['user_info.backendAuth.CaseInsensitiveModelBackend']
 
 CORS_ALLOWED_ORIGINS = [
+    'http://35.78.225.253',
+    'http://35.78.225.253:3000',
     'http://127.0.0.1:8081',
     'http://localhost:8081',
     'http://127.0.0.1:8080',
@@ -87,17 +89,27 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'django',
+#         'USER': 'root',
+#         'PASSWORD': 'password',
+#         'HOST': '172.17.0.1',
+#         'PORT': '3307',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'django',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': '172.17.0.1',
-        'PORT': '3307',
+        'USER': 'zentropy',
+        'PASSWORD': '#zentropy888',
+        'HOST': 'zentropy.ci3nncuorihj.ap-northeast-1.rds.amazonaws.com',
+        'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -143,9 +155,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = '/static/'
-# # collect from dir
+# collect from dir
 # STATICFILES_DIRS = [
-#    BASE_DIR / "dist",
+#     BASE_DIR / "dist",
 # ]
 # # collect to dir
 # STATIC_ROOT = BASE_DIR / 'static'

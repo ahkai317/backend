@@ -18,23 +18,25 @@ def get_stock(v1, v2):
     stock_list = pd.DataFrame(stock_list)
     stock_list = stock_list.iloc[:, 0].values.tolist()
 
-    def updn(row):
+    def updn(row: pd.DataFrame):
         if row["股價"] != "-" and row["昨收"] != "-":
             return round(float(row["股價"]) - float(row["昨收"]), 2)
         return "-"
 
-    def updn100(row):
+    def updn100(row: pd.DataFrame):
         if row["漲跌"] != "-":
             return round(row["漲跌"]/float(row["昨收"]) * 100, 2)
         return "-"
 
-    def getSqlData(row):
+    def getSqlData(row: pd.DataFrame) -> str:
         if row["股價"] == "-":
-            sqlData = StockDetail.objects.filter(
-                stock_id__stock__in=[row["代號"]]).values()[0]['price']
-            return sqlData
+            try:
+                sqlData = StockDetail.objects.filter(
+                    stock_id__stock__in=[row["代號"]]).values()[0]['price']
+                return sqlData
+            except:
+                return row["股價"]
         return row["股價"]
-
     result = pd.DataFrame()
 
     for n in range(int(len(stock_list)/100)+1):
