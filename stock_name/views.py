@@ -6,7 +6,6 @@ import re
 from bs4 import BeautifulSoup
 from rest_framework import filters
 from django.http import Http404, JsonResponse
-from traitlets import default
 from stock_name.filter import StockFilter
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -114,7 +113,7 @@ class StockViewSet(ReadOnlyModelViewSet):
     def orderData(self, request: Request) -> Response:
         # get variable from GET Request
         orderColumn = request.GET.get('col')
-        industry = request.GET.get('industry', default='')
+        industry = request.GET.get('industry', default='化學工業')
         reversOrder = request.GET.get('reverse', default='')
         # set the queryset
         queryset = StockDetail.objects.filter(stock__industry__icontains=industry).extra(
