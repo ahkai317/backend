@@ -2,11 +2,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from stock_name.models import StockName
 from user_info.models import FavoriteStocks, UserInfo
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import ValidationError
 from user_info.serializers import UserRegisterSerilizer, FavoriteStockSerializer
 from user_info.permission import IsSelfOrReadOnly
 
@@ -19,7 +19,6 @@ from rest_framework.decorators import action
 class UserModelViewSet(viewsets.ModelViewSet):
     queryset = UserInfo.objects.all()
     serializer_class = UserRegisterSerilizer
-    # lookup_field = 'username'
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -39,27 +38,32 @@ class UserModelViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         else:
-            content = {'detail': '此用戶沒有權限'}
-            return Response(content, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied
 
     @action(detail=False, methods=['post'], url_path='mfs')
     def modifyFavStock(self, request):
-        try:
-            user = request.user
-            if request.POST.get('remove'):
-                stock = StockName.objects.get(stock=request.POST.get('remove'))
-                user.favoriteStocks.remove(stock)
-                result = {'detail': '移除成功'}
-            else:
-                stock = StockName.objects.get(stock=request.POST.get('stock'))
-                user.favoriteStocks.add(stock)
-                queryset = FavoriteStocks.objects.filter(
-                    user=user, stock=stock)
-                serializer = FavoriteStockSerializer(queryset, many=True)
-                result = serializer.data
-            return Response(result, status=status.HTTP_201_CREATED)
-        except ObjectDoesNotExist:
-            return Response({'detail': '此股票代號不存在'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        user = request.user
+        stock = request.POST.get('remove') or request.POST.get('stock')
+        if user and user.is_authenticated:
+            try:
+                if request.POST.get('remove'):
+                    stock = StockName.objects.get(
+                        stock=stock)
+                    user.favoriteStocks.remove(stock)
+                    result = {'detail': '移除成功'}
+                else:
+                    stock = StockName.objects.get(
+                        stock=stock)
+                    user.favoriteStocks.add(stock)
+                    queryset = FavoriteStocks.objects.filter(
+                        user=user, stock=stock)
+                    serializer = FavoriteStockSerializer(queryset, many=True)
+                    result = serializer.data
+                return Response(result, status=status.HTTP_201_CREATED)
+            except ObjectDoesNotExist:
+                raise ValidationError(
+                    '股票代號 \'%s\' 不存在' % stock)
+        raise PermissionDenied
 
 
 # ======================== 自己玩玩 ===========================
