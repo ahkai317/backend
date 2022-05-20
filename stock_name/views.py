@@ -113,10 +113,9 @@ class StockViewSet(ReadOnlyModelViewSet):
     def orderData(self, request: Request) -> Response:
         # get variable from GET Request
         orderColumn = request.GET.get('col')
-        industry = request.GET.get('industry', default='化學工業')
         reversOrder = request.GET.get('reverse', default='')
         # set the queryset
-        queryset = StockDetail.objects.filter(stock__industry__icontains=industry).extra(
+        queryset = super().filter_queryset(self.queryset).extra(
             {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock_id')}).order_by('%sinter' % reversOrder)
         # serializer for stock, stockName, industry...
         serializer = StockDetailSerializer(queryset, many=True)
@@ -127,8 +126,8 @@ class StockViewSet(ReadOnlyModelViewSet):
         # page = self.paginate_queryset(queryset.values("stock__stock", "stock__stockName"))
         # *****************************************************************
         # get the response
-        # return a Response, so just return this
         responseData = self.get_paginated_response(page)
+        # return a Response, so just return this
         if responseData.data['results'] == []:
             raise Http404
         # return responseData

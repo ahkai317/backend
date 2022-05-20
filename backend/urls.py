@@ -5,7 +5,7 @@ from . views import main, stock_data
 
 from rest_framework.routers import DefaultRouter
 
-from user_info.views import UserModelViewSet, FavoriteViewSet
+from user_info.views import UserModelViewSet
 from stock_name.views import StockViewSet, news
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -14,7 +14,6 @@ from rest_framework_simplejwt.views import (
 )
 router = DefaultRouter()
 router.register(r'user', UserModelViewSet)
-router.register(r'fruit', FavoriteViewSet)
 router.register(r'stock_name', StockViewSet)
 
 urlpatterns = [

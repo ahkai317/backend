@@ -1,19 +1,20 @@
-
-from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
-from user_info.models import UserInfo, Favorite
+from stock_name.models import StockName
+from user_info.models import FavoriteStocks, UserInfo
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
 
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from user_info.serializers import UserRegisterSerilizer, FavoriteSerializer, FavoriteListSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from user_info.serializers import UserRegisterSerilizer, FavoriteStockSerializer
 from user_info.permission import IsSelfOrReadOnly
-
 
 
 # ============================================================
 
 from rest_framework.decorators import action
+
 
 class UserModelViewSet(viewsets.ModelViewSet):
     queryset = UserInfo.objects.all()
@@ -41,32 +42,25 @@ class UserModelViewSet(viewsets.ModelViewSet):
             content = {'detail': '此用戶沒有權限'}
             return Response(content, status=status.HTTP_403_FORBIDDEN)
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
-    permission_classes = [IsAuthenticated]
+    @action(detail=False, methods=['post'], url_path='mfs')
+    def modifyFavStock(self, request):
+        try:
+            user = request.user
+            if request.POST.get('remove'):
+                stock = StockName.objects.get(stock=request.POST.get('remove'))
+                user.favoriteStocks.remove(stock)
+                result = {'detail': '移除成功'}
+            else:
+                stock = StockName.objects.get(stock=request.POST.get('stock'))
+                user.favoriteStocks.add(stock)
+                queryset = FavoriteStocks.objects.filter(
+                    user=user, stock=stock)
+                serializer = FavoriteStockSerializer(queryset, many=True)
+                result = serializer.data
+            return Response(result, status=status.HTTP_201_CREATED)
+        except ObjectDoesNotExist:
+            return Response({'detail': '此股票代號不存在'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_permissions(self):
-        if self.action == 'list':
-            self.permission_classes = [IsAdminUser]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return FavoriteListSerializer
-        else:
-            return FavoriteSerializer
-
-    @action(detail=False, methods=['get'])
-    def getfavoritelist(self, request):
-        if (request.user and request.user.is_authenticated):
-            queryset = Favorite.objects.filter(user=request.user)
-            serializer = self.get_serializer(queryset, many=True)
-            return JsonResponse(serializer.data, safe=False)
-        else:
-            content = {'detail': 'Authenticated not provided'}
-            return Response(content, status=status.HTTP_403_FORBIDDEN)
 
 # ======================== 自己玩玩 ===========================
 # from django.contrib import auth

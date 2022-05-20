@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from user_info.models import UserInfo
+from user_info.models import FavoriteStocks, UserInfo
 # Register your models here.
 
 
@@ -17,3 +17,4 @@ class AccountAdmin(UserAdmin):
 
 
 admin.site.register(UserInfo, AccountAdmin)
+admin.site.register(FavoriteStocks)
