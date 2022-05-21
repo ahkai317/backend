@@ -43,7 +43,7 @@ class UserModelViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='mfs')
     def modifyFavStock(self, request):
         user = request.user
-        stock = request.POST.get('remove') or request.POST.get('stock')
+        stock = request.POST.get('remove') or request.POST.get('add')
         if user and user.is_authenticated:
             try:
                 if request.POST.get('remove'):
@@ -64,6 +64,15 @@ class UserModelViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     '股票代號 \'%s\' 不存在' % stock)
         raise PermissionDenied
+
+    # @action(detail=False, methods=['get'], url_path='getmfs')
+    # def getFavStock(self, request):
+    #     user = request.user
+    #     if user and user.is_authenticated:
+    #         queryset = FavoriteStocks.objects.filter(user=user)
+    #         serializer = FavoriteStockSerializer(queryset)
+    #         return Response(serializer.data)
+    #     raise PermissionDenied
 
 
 # ======================== 自己玩玩 ===========================

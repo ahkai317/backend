@@ -21,7 +21,11 @@ class StockFilter(django_filters.rest_framework.FilterSet):
     stocks = django_filters.BaseInFilter(
         field_name='stock__stock', lookup_expr='in')
     sort = django_filters.OrderingFilter(
-        fields=['stock__stockName', '-stock__stock', 'stock__stock', 'stock__industry', '-stock__industry'])
+        fields=['stock__stockName',
+                '-stock__stock', 'stock__stock',
+                'stock__industry', '-stock__industry',
+                '-stock__favoriteStock__updated',
+                'stock__favoriteStock__updated'])
     stockName = django_filters.CharFilter(
         field_name='stock__stockName', lookup_expr='icontains')
     industry = django_filters.CharFilter(

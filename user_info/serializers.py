@@ -1,6 +1,4 @@
-from attr import field
 from rest_framework import serializers
-from traitlets import default
 from user_info.models import FavoriteStocks, UserInfo
 from stock_name.models import StockName
 from django.contrib.auth.password_validation import validate_password

@@ -1,12 +1,10 @@
-from statistics import mode
-from attr import field
-from numpy import source
+from user_info.serializers import FavoriteStockSerializer
 from stock_name.models import StockDetail, StockName
-from rest_framework.serializers import ModelSerializer, RelatedField
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework import serializers
+from rest_framework.pagination import LimitOffsetPagination
 
 
-class StockIndustrySerializer(ModelSerializer):
+class StockIndustrySerializer(serializers.ModelSerializer):
     class Meta:
         model = StockName
         fields = ['industry']
@@ -14,14 +12,16 @@ class StockIndustrySerializer(ModelSerializer):
 # =====================================
 
 
-class StockSerializer(ModelSerializer):
+class StockSerializer(serializers.ModelSerializer):
+    favoriteStock = FavoriteStockSerializer(many=True)
+
     class Meta:
         model = StockName
         fields = ['stock', 'stockName', 'industry',
-                  'updated']
+                  'updated', 'favoriteStock']
 
 
-class StockDetailSerializer(ModelSerializer):
+class StockDetailSerializer(serializers.ModelSerializer):
     stock = StockSerializer(many=False)
 
     class Meta:

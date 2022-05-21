@@ -1,3 +1,4 @@
+from operator import mod
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, UserManager
 from django.core.exceptions import ValidationError
@@ -88,6 +89,7 @@ class FavoriteStocks(models.Model):
         UserInfo, on_delete=models.CASCADE, related_name='favoriteStock')
     stock = models.ForeignKey(
         StockName, on_delete=models.CASCADE, related_name='favoriteStock')
+    updated = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     def __str__(self) -> str:
-        return f'{self.user} -> {self.stock}'
+        return f'{self.user} ---------> {self.stock} ---------> {self.updated}'

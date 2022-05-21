@@ -5,7 +5,7 @@ import random
 import re
 from bs4 import BeautifulSoup
 from rest_framework import filters
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from stock_name.filter import StockFilter
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny
 from stock_name.models import StockName, StockDetail
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.exceptions import PermissionDenied
 from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
 # Create your views here.
 
@@ -115,8 +116,9 @@ class StockViewSet(ReadOnlyModelViewSet):
         orderColumn = request.GET.get('col')
         reversOrder = request.GET.get('reverse', default='')
         # set the queryset
-        queryset = super().filter_queryset(self.queryset).extra(
-            {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock_id')}).order_by('%sinter' % reversOrder)
+        self.queryset = self.queryset.extra(
+            {'inter': "CAST(%s as DECIMAL(10,2))" % (orderColumn or 'stock')}).order_by('%sinter' % reversOrder)
+        queryset = super().filter_queryset(self.queryset)
         # serializer for stock, stockName, industry...
         serializer = StockDetailSerializer(queryset, many=True)
         # get the pagination info and create page
@@ -128,10 +130,20 @@ class StockViewSet(ReadOnlyModelViewSet):
         # get the response
         responseData = self.get_paginated_response(page)
         # return a Response, so just return this
-        if responseData.data['results'] == []:
-            raise Http404
         # return responseData
         return responseData
+
+    @action(detail=False, methods=['get'], url_path='getmfs')
+    def getFavStockDetail(self, request: Request) -> Response:
+        user = request.user
+        if user and user.is_authenticated:
+            self.queryset = self.queryset.filter(
+                stock__favoriteStock__user=user)
+            queryset = super().filter_queryset(self.queryset)
+            serializer = StockDetailSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied
 
     @action(detail=False, methods=['get'])
     def industry(self, request: Request) -> Response:

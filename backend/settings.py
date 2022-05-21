@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'stock_name',
     'user_info',
@@ -96,7 +97,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': '172.17.0.1',
-        'PORT': '3333',
+        'PORT': '3307',
     }
 }
 
@@ -178,10 +179,9 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer'),
-    # 'ROTATE_REFRESH_TOKENS': False,
-    # 'BLACKLIST_AFTER_ROTATION': False,
-    # 'UPDATE_LAST_LOGIN': False,
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    # 'ROTATE_REFRESH_TOKENS': True,
+    # 'BLACKLIST_AFTER_ROTATION': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
     'UPDATE_LAST_LOGIN': True,
 }
