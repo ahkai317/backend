@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 # def get_ip(request):
 #   x_forwarded_for = request.META.get('x-forwarded-for')
 #   if x_forwarded_for:
@@ -13,12 +13,17 @@ Created on Tue Apr 26 03:29:13 2022
 
 @author: Zentropy 
 """
-
+import joblib
+import numpy as np
+import pandas as pd
 from datetime import timedelta
-from backend.serializers import LogOutSerializer
+from rest_framework import status
 from rest_framework import status
 from rest_framework import generics
+import machineLearning.stock_feature as s
+from rest_framework.request import Request
 from rest_framework.response import Response
+from backend.serializers import LogOutSerializer
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -66,4 +71,30 @@ class LogoutAPIView(generics.GenericAPIView):
 
         return Response({'detail': 'Logout succeed'}, status=status.HTTP_204_NO_CONTENT)
 
-# class PerdictAPIView(generics.GenericAPIView):
+
+def predict(request: Request) -> JsonResponse:
+    stock = request.GET.get('stock')
+    try:
+        total = pd.read_csv("/app/backend/machineLearning/total.csv")
+        idx = total[total["stock"] == stock].iloc[0, -1]
+        if idx == 2:
+            return JsonResponse({'detail': "ETN is unpredictable"}, status=status.HTTP_400_BAD_REQUEST)
+        model = joblib.load(
+            f"/app/backend/machineLearning/pkl/model_{idx}.pkl")
+        model2 = joblib.load(
+            f"/app/backend/machineLearning/pkl/model_32.pkl")
+
+        df = s.data(stock)
+        if df.shape[0] == 0:
+            return JsonResponse({'detail': f"stock {stock} is unpredictable"}, status=status.HTTP_400_BAD_REQUEST)
+        X = np.array(df.iloc[-1, 4:-1]).reshape(1, -1)
+        y = model.predict(X)[0]
+        y2 = model2.predict(X)[0]
+        return JsonResponse({'predict': {
+            'single': str(y),
+            'universal': str(y2)
+        }}, status=status.HTTP_200_OK)
+    except FileNotFoundError:
+        return JsonResponse({'detail': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
+    except IndexError:
+        return JsonResponse({'detail': 'stock not found'}, status=status.HTTP_404_NOT_FOUND)

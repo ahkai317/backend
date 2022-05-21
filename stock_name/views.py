@@ -1,10 +1,10 @@
-from urllib.request import Request
+import re
+import random
 import requests
 import pandas as pd
-import random
-import re
 from bs4 import BeautifulSoup
 from rest_framework import filters
+from urllib.request import Request
 from django.http import JsonResponse
 from stock_name.filter import StockFilter
 from rest_framework.decorators import action
