@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import re
+import pandas as pd
 
 def main():
     """Run administrative tasks."""
