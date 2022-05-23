@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'stock_name',
     'user_info',
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -185,3 +186,15 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
     'UPDATE_LAST_LOGIN': True,
 }
+
+# Amazon S3 Configuration
+AWS_ACCESS_KEY_ID = 'AKIAR6HU6UDDDIOR44X2'  # 存取金鑰ID
+AWS_SECRET_ACCESS_KEY = '9qeA/Nde8sVydKKfEpPYtN+yquDyJoA7j9LyL9jv'  # 私密存取金鑰
+AWS_STORAGE_BUCKET_NAME = 'zentropy'  # Amazon S3儲存體名稱
+
+# Django Storages Configuration
+AWS_S3_FILE_OVERWRITE = True  # 同名檔案是否要覆寫
+AWS_DEFAULT_ACL = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_LOCATION = 'static'
