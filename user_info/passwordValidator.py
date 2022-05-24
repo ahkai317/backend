@@ -1,5 +1,4 @@
 import re
-from unittest import result
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
@@ -11,6 +10,9 @@ class CustomPasswordValidator(object):
         if not result:
             raise ValidationError(_('密碼需包含大小寫英文及數字'))
 
+    def get_help_text(self):
+        return _('密碼需包含大小寫英文及數字')
+
 
 class LengthValidator(object):
     def validate(self, password, user=None):
@@ -19,6 +21,9 @@ class LengthValidator(object):
         if not result:
             raise ValidationError(_('密碼長度需為6-20個字'))
 
+    def get_help_text(self):
+        return _('密碼長度需為6-20個字')
+
 
 class IllegalCharacterValidator(object):
     def validate(self, password, user=None):
@@ -26,3 +31,6 @@ class IllegalCharacterValidator(object):
         result = re.match(r, password)
         if result:
             raise ValidationError(_('密碼中不可包含中文'))
+
+    def get_help_text(self):
+        return _('密碼中不可包含中文')

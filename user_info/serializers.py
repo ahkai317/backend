@@ -1,5 +1,7 @@
 import re
 from rest_framework import serializers
+from sqlalchemy import null
+from traitlets import default
 from stock_name.models import StockName
 from django.core.exceptions import ValidationError
 from user_info.models import FavoriteStocks, UserInfo
@@ -11,7 +13,7 @@ from django.contrib.auth.password_validation import validate_password
 
 class UserRegisterSerilizer(serializers.ModelSerializer):
     favoriteStocks = serializers.SlugRelatedField(
-        queryset=StockName.objects.all(), many=True, slug_field='stock')
+        queryset=StockName.objects.all(), many=True, slug_field='stock', default=[])
 
     class Meta:
         model = UserInfo
@@ -22,7 +24,7 @@ class UserRegisterSerilizer(serializers.ModelSerializer):
             'email': {'validators': [UniqueValidator(queryset=UserInfo.objects.all(), message='此Email已經有人使用！')]},
             'username': {'validators': [UniqueValidator(queryset=UserInfo.objects.all(), message='此使用者名稱已經有人使用！')]},
             "last_login": {'read_only': True}, "date_joined": {'read_only': True},
-            "favoriteStocks": {'read_only': True, 'required': False},
+            "favoriteStocks": {'read_only': True},
             "phone": {'required': True, 'validators': [UniqueValidator(queryset=UserInfo.objects.all(), message='此手機已經有人使用！')]}
         }
 

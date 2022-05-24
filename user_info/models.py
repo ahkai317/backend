@@ -50,7 +50,7 @@ def get_profile_image_filepath(self, filename):
 
 
 def get_default_profile_image():
-    return 'static/logo.png'
+    return 'logo.png'
 
 
 class UserInfo(AbstractBaseUser):
