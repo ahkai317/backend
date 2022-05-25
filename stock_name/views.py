@@ -14,7 +14,7 @@ from stock_name.models import StockName, StockDetail
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import PermissionDenied
-from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
+from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer, StockVolumnSerializer
 # Create your views here.
 
 
@@ -154,6 +154,12 @@ class StockViewSet(ReadOnlyModelViewSet):
         outPut = pd.DataFrame(serializer.data)
         outPut = outPut.to_dict('list')
         return Response(outPut)
+
+    @action(detail=False, methods=['get'])
+    def volumn(self, request: Request) -> Response:
+        queryset = StockDetail.objects.all()
+        serializer = StockVolumnSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     # ==============================================================================================
     # from django.core.paginator import Paginator
