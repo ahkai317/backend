@@ -1,7 +1,10 @@
+from multiprocessing.dummy import Array
 import re
 import random
+from typing import List
 import requests
 import pandas as pd
+from django.db.models import F
 from bs4 import BeautifulSoup
 from rest_framework import filters
 from urllib.request import Request
@@ -157,9 +160,30 @@ class StockViewSet(ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def volumn(self, request: Request) -> Response:
-        queryset = StockDetail.objects.all()
-        serializer = StockVolumnSerializer(queryset, many=True)
-        return Response(serializer.data)
+        queryset = StockDetail.objects.annotate(
+            stockId=F('stock__stock')).values('stockId', 'volumn')
+
+        def sort(arr: List) -> List:
+            left = []
+            right = []
+            mid = []
+
+            if len(arr) > 1:
+                pivot = int(arr[0]['volumn'])
+                for x in arr:
+                    if int(x['volumn']) > pivot:
+                        left.append(x)
+                    if int(x['volumn']) < pivot:
+                        right.append(x)
+                    if int(x['volumn']) == pivot:
+                        mid.append(x)
+                return sort(left) + mid + sort(right)
+            else:
+                return arr
+        page = self.paginate_queryset(sort(queryset))
+        responseData = self.get_paginated_response(page)
+        # serializer = StockVolumnSerializer(queryset, many=True)
+        return responseData
 
     # ==============================================================================================
     # from django.core.paginator import Paginator
