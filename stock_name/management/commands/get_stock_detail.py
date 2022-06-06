@@ -1,10 +1,10 @@
 # ========= django setting required ===============
-from dataclasses import dataclass
-from time import time
-from xxlimited import Str
+import time
 from django.core.management.base import BaseCommand
+from django import db
 from backend import settings
 from django.utils import timezone
+import datetime
 import threading
 
 # ============ main code ===========================
@@ -65,6 +65,7 @@ def get_stock(v1, v2):
         result = pd.concat([result, df], ignore_index=True)
         # ================== Start to sql ==============================
     result = result.to_dict('records')
+    print('start sql ...')
     for stockDetail in result:
         StockDetail.objects.update_or_create(stock=StockName.objects.filter(stock=stockDetail['代號']).first(),
                                              defaults={'stock': StockName.objects.filter(stock=stockDetail['代號']).first(),
@@ -77,19 +78,35 @@ def get_stock(v1, v2):
                                                        'low': stockDetail['最低'],
                                                        'volumn': stockDetail['成交量'],
                                                        'updated': timezone.now()})
+    db.connection.close()
     print("執行完畢...")
 
 
 class Command(BaseCommand):
+    def checkTime(self):
+        now = datetime.datetime.now().time()
+        startTime = datetime.time(7, 0, 0)
+        endTime = datetime.time(13, 50, 0)
+        return now > startTime and now < endTime
 
     def handle(self, *args, **options):
-        stock_list = StockName.objects.values('stock')
-        stock_list = pd.DataFrame(stock_list)
-        stock_list = stock_list.iloc[0:round(
-            len(stock_list)/2), 0].values.tolist()
-        step = 99
-        totalStep = int(len(stock_list)/step)+1
-        for i in range(totalStep):
-            globals()['task' + str(i)] = threading.Thread(target=get_stock,
-                                                          args=(step*i, step*(i+1)))
-            globals()['task' + str(i)].start()
+        while self.checkTime():
+            print('start....')
+            stock_list = StockName.objects.values('stock')
+            stock_list = pd.DataFrame(stock_list)
+            stock_list = stock_list.values.tolist()
+            step = 99
+            totalStep = int(len(stock_list)/step)+1
+            jobs = []
+            for i in range(totalStep):
+                globals()['task' + str(i)] = threading.Thread(target=get_stock,
+                                                              args=(step*i, step*(i+1)))
+                jobs.append(globals()['task' + str(i)])
+                globals()['task' + str(i)].start()
+
+            for j in jobs:
+                j.join()
+
+            now = datetime.datetime.now().time()
+            print('end....', now)
+            time.sleep(4)

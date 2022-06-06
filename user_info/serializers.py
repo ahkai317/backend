@@ -1,7 +1,5 @@
 import re
 from rest_framework import serializers
-from sqlalchemy import null
-from traitlets import default
 from stock_name.models import StockName
 from django.core.exceptions import ValidationError
 from user_info.models import FavoriteStocks, UserInfo

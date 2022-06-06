@@ -57,8 +57,6 @@ INSTALLED_APPS = [
     'stock_name',
     'user_info',
     'storages',
-    'werkzeug_debugger_runserver',
-    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -103,7 +101,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': '172.17.0.1',
-        'PORT': '3307',
+        'PORT': '3333',
     }
 }
 
