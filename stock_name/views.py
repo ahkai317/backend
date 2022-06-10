@@ -1,7 +1,10 @@
+from multiprocessing.dummy import Array
 import re
 import random
+from typing import List
 import requests
 import pandas as pd
+from django.db.models import F
 from bs4 import BeautifulSoup
 from rest_framework import filters
 from urllib.request import Request
@@ -14,7 +17,7 @@ from stock_name.models import StockName, StockDetail
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import PermissionDenied
-from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer
+from stock_name.serializers import StockIndustrySerializer, StandardResultsSetPagination, StockDetailSerializer, StockVolumnSerializer
 # Create your views here.
 
 
@@ -154,6 +157,33 @@ class StockViewSet(ReadOnlyModelViewSet):
         outPut = pd.DataFrame(serializer.data)
         outPut = outPut.to_dict('list')
         return Response(outPut)
+
+    @action(detail=False, methods=['get'])
+    def volumn(self, request: Request) -> Response:
+        queryset = StockDetail.objects.annotate(
+            stockId=F('stock__stock')).values('stockId', 'volumn')
+
+        def sort(arr: List) -> List:
+            left = []
+            right = []
+            mid = []
+
+            if len(arr) > 1:
+                pivot = int(arr[0]['volumn'])
+                for x in arr:
+                    if int(x['volumn']) > pivot:
+                        left.append(x)
+                    if int(x['volumn']) < pivot:
+                        right.append(x)
+                    if int(x['volumn']) == pivot:
+                        mid.append(x)
+                return sort(left) + mid + sort(right)
+            else:
+                return arr
+        page = self.paginate_queryset(sort(queryset))
+        responseData = self.get_paginated_response(page)
+        # serializer = StockVolumnSerializer(queryset, many=True)
+        return responseData
 
     # ==============================================================================================
     # from django.core.paginator import Paginator

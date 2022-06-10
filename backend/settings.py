@@ -10,13 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+
+import os
 from pathlib import Path
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 # Quick-start development settings - `unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -31,8 +36,6 @@ AUTH_USER_MODEL = 'user_info.UserInfo'
 AUTHENTICATION_BACKENDS = ['user_info.backendAuth.CaseInsensitiveModelBackend']
 
 CORS_ALLOWED_ORIGINS = [
-    'http://35.78.225.253',
-    'http://35.78.225.253:3000',
     'http://127.0.0.1:8081',
     'http://localhost:8081',
     'http://127.0.0.1:8080',
@@ -53,6 +56,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'stock_name',
     'user_info',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -185,3 +189,15 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
     'UPDATE_LAST_LOGIN': True,
 }
+
+# Amazon S3 Configuration
+AWS_ACCESS_KEY_ID = 'AKIAR6HU6UDDDIOR44X2'  # 存取金鑰ID
+AWS_SECRET_ACCESS_KEY = '9qeA/Nde8sVydKKfEpPYtN+yquDyJoA7j9LyL9jv'  # 私密存取金鑰
+AWS_STORAGE_BUCKET_NAME = 'zentropy'  # Amazon S3儲存體名稱
+
+# Django Storages Configuration
+AWS_S3_FILE_OVERWRITE = True  # 同名檔案是否要覆寫
+AWS_DEFAULT_ACL = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_LOCATION = 'static'

@@ -38,6 +38,17 @@ class StandardResultsSetPagination(LimitOffsetPagination):
     default_limit = 30
 
 
+class StockVolumnSerializer(serializers.ModelSerializer):
+    stock = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='stock'
+    )
+
+    class Meta:
+        model = StockDetail
+        fields = ['volumn', 'stock']
+
 # =====================================
 # class StockOrderSerializer(ModelSerializer):
 #     class Meta:

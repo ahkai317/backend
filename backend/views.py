@@ -36,40 +36,27 @@ def stock_data(request):
     範例：
     splitData=stock_data("2330","2016-01-01","2022-12-31")
     """
+    from FinMind.data import DataLoader
+
+    # api.login_by_token(api_token='token')
+    # api.login(user_id='user_id',password='password')
+
     import yfinance as yf
     from datetime import datetime
+    api = DataLoader()
     res = request.GET
     stock = res['code']
     start = res['start']
-    end = datetime.strptime(res['end'], "%Y-%m-%d") + timedelta(days=1)
+    end = res['end']
+    df = api.taiwan_stock_daily(
+        stock_id=stock,
+        start_date=start,
+        end_date=end
+    )
 
-    df = yf.download(stock+".TW", start=start, end=end.strftime("%Y-%m-%d"))
-    del df["Adj Close"]
-    del df["Volume"]
-
-    df.insert(0, "day", df.index.strftime("%Y-%m-%d"))
-    df.insert(2, "close", df.Close)
-    df.insert(3, "low", df.Low)
-
-    del df["Close"]
-    del df["Low"]
-
-    df = df.iloc[:].round(2)
+    df = df[['date', 'open', 'close', 'min', 'max']]
     stock_data = df.values.tolist()
     return JsonResponse(stock_data, safe=False)
-
-
-class LogoutAPIView(generics.GenericAPIView):
-    serializer_class = LogOutSerializer
-
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({'detail': 'Logout succeed'}, status=status.HTTP_204_NO_CONTENT)
 
 
 def predict(request: Request) -> JsonResponse:
@@ -98,3 +85,16 @@ def predict(request: Request) -> JsonResponse:
         return JsonResponse({'detail': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
     except IndexError:
         return JsonResponse({'detail': 'stock not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class LogoutAPIView(generics.GenericAPIView):
+    serializer_class = LogOutSerializer
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'detail': 'Logout succeed'}, status=status.HTTP_204_NO_CONTENT)
